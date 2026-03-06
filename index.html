@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VOICEAI LABS — Voice-First Agentic Operating Layer</title>
+    <meta
+      name="description"
+      content="VOICEAI LABS turns voice intent into secure executable actions using LLM function calling and partner APIs like Zomato, Ola, and Uber."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="nav container">
+        <div class="brand">VOICEAI <span>LABS</span></div>
+        <a class="btn btn-secondary" href="#deadline">View Deadline Plan</a>
+      </nav>
+      <div class="container hero-content">
+        <p class="eyebrow">Voice-First Agentic Operating Layer</p>
+        <h1>Speak once. Execute instantly.</h1>
+        <p class="lead">
+          VOICEAI LABS converts user intent into structured actions and securely executes them using
+          trusted APIs — no fragile screen automation.
+        </p>
+        <div class="cta-row">
+          <a class="btn" href="#demo">Try Interactive Demo</a>
+          <a class="btn btn-secondary" href="#architecture">See Architecture</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section container" id="vision">
+        <h2>What VOICEAI LABS does</h2>
+        <p>
+          Users speak natural requests like <strong>“Book a cab to the airport tomorrow”</strong> or
+          <strong>“Order biryani from Zomato”</strong>. Our orchestration layer recognizes intent,
+          extracts parameters, routes to authorized service providers (Ola/Uber/Zomato), compares
+          options, asks for confirmation, and executes.
+        </p>
+      </section>
+
+      <section class="section section-alt" id="architecture">
+        <div class="container">
+          <h2>Function-Calling Architecture</h2>
+          <div class="grid five-up">
+            <article class="card"><h3>1) Intent Recognition</h3><p>NLP maps speech to user goal.</p></article>
+            <article class="card"><h3>2) Parameter Extraction</h3><p>Destination, time, cuisine, budget, pickup, etc.</p></article>
+            <article class="card"><h3>3) API Orchestration</h3><p>Calls partner APIs through a secure connector layer.</p></article>
+            <article class="card"><h3>4) Option Ranking</h3><p>Compares ETA, pricing, ratings, and policy filters.</p></article>
+            <article class="card"><h3>5) Confirm & Execute</h3><p>User approves, then transaction executes with logs.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section container">
+        <h2>Core Platform Components</h2>
+        <ul class="feature-list">
+          <li>Intent recognition engine</li>
+          <li>Agent orchestration layer</li>
+          <li>Secure API integration framework</li>
+          <li>Regional ASR optimization</li>
+          <li>Context memory system</li>
+        </ul>
+      </section>
+
+      <section class="section section-alt" id="demo">
+        <div class="container">
+          <h2>Interactive Voice-to-Action Demo (Prototype)</h2>
+          <p>
+            This prototype simulates how VOICEAI LABS converts spoken intent into a function call
+            payload for partner APIs.
+          </p>
+          <div class="demo-shell">
+            <div class="demo-buttons">
+              <button class="btn demo-btn" data-flow="food">Voice: Order food via Zomato</button>
+              <button class="btn demo-btn" data-flow="cab">Voice: Book cab via Ola/Uber</button>
+            </div>
+            <pre id="demoOutput" aria-live="polite">Select a demo action to generate structured API call output...</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="section container" id="deadline">
+        <h2>Execution Deadline Plan (4 Weeks)</h2>
+        <div class="timeline">
+          <article class="milestone">
+            <h3>Week 1 — Voice & Intent Baseline</h3>
+            <p>ASR pipeline + prompt/function schema for food and cab use cases.</p>
+          </article>
+          <article class="milestone">
+            <h3>Week 2 — API Connector Setup</h3>
+            <p>Integrate Zomato API + Ola/Uber adapters with secure token handling.</p>
+          </article>
+          <article class="milestone">
+            <h3>Week 3 — Ranking + Confirmation Layer</h3>
+            <p>Compare vendors (ETA/price/rating) and add confirmation workflow.</p>
+          </article>
+          <article class="milestone">
+            <h3>Week 4 — End-to-End Demo</h3>
+            <p>“Order food” and “Book cab” voice flows running with live execution logs.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>VOICEAI LABS — Building the default voice interaction layer across devices.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
