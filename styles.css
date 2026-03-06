@@ -1,0 +1,81 @@
+:root {
+  --bg: #070b14;
+  --panel-soft: #0c1323;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --brand: #22d3ee;
+  --brand-strong: #06b6d4;
+  --border: #1f2937;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+  background: linear-gradient(180deg, #05070f 0%, #0a1222 45%, #070b14 100%);
+  line-height: 1.6;
+}
+
+.container { width: min(1100px, 92%); margin: 0 auto; }
+.hero { padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+.nav { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; }
+.brand { font-weight: 800; letter-spacing: .05em; }
+.brand span { color: var(--brand); }
+.hero-content { padding: 2.5rem 0 1rem; }
+.eyebrow { color: var(--brand); font-weight: 600; margin: 0 0 .5rem; }
+h1 { font-size: clamp(2rem, 5vw, 3.2rem); margin: 0; line-height: 1.1; }
+.lead { color: var(--muted); max-width: 760px; }
+
+.section { padding: 3.5rem 0; }
+.section-alt { background: rgba(16, 24, 40, .45); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+h2 { margin-top: 0; font-size: clamp(1.5rem, 3vw, 2rem); }
+
+.grid { display: grid; gap: 1rem; }
+.five-up { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.two-up { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+
+.card, .demo-shell, .milestone {
+  background: var(--panel-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.form-card { display: grid; gap: .7rem; align-content: start; }
+label { display: grid; gap: .35rem; font-size: .94rem; }
+input, select {
+  border: 1px solid var(--border);
+  background: #0a111f;
+  color: var(--text);
+  border-radius: 8px;
+  padding: .6rem .7rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: .7rem 1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: linear-gradient(180deg, var(--brand), var(--brand-strong));
+  color: #041017;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
+
+pre {
+  margin: .5rem 0 0;
+  background: #060b15;
+  color: #c6f7ff;
+  border-radius: 10px;
+  border: 1px solid #1d2b45;
+  padding: 1rem;
+  overflow-x: auto;
+  min-height: 220px;
+}
+
+.timeline { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.milestone h3 { margin-top: 0; }
+.footer { border-top: 1px solid var(--border); padding: 1.2rem 0; color: var(--muted); text-align: center; }
