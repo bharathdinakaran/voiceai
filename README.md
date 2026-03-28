@@ -1,14 +1,14 @@
 # VOICEAI LABS — Live Booking Web App
 
-This app provides a real booking console for:
-- Food orders via **Zomato API**
-- Cab bookings via **Ola API** / **Uber API**
+This app provides:
+- Home page (`/` or `/index.html`) with live food and cab booking console
+- About Us page (`/about.html`)
+- Contact page (`/contact.html`) with contact submission endpoint
 
 ## Run
 
 ```bash
 cp .env.example .env
-npm install
 npm start
 ```
 
@@ -23,8 +23,9 @@ Open: `http://localhost:8080`
 
 ## API endpoints used by frontend
 
+- `GET /api/health`
 - `POST /api/book/food` → forwards to `${ZOMATO_BASE_URL}/orders`
 - `POST /api/book/cab` → forwards to `${OLA_BASE_URL}/bookings` and/or `${UBER_BASE_URL}/bookings`
-- `GET /api/health`
+- `POST /api/contact` → stores/forwards contact details to optional audit webhook
 
-If credentials are missing, the server returns a failure response and does **not** fake bookings.
+If credentials are missing, booking endpoints return failure and do **not** fake bookings.

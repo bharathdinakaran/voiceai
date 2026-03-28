@@ -177,6 +177,28 @@ async function handleCabBooking(req, res) {
   return sendJson(res, 502, { error: 'No provider booking succeeded.', details: errors });
 }
 
+
+
+async function handleContact(req, res) {
+  const body = await parseJson(req);
+  if (!body) return sendJson(res, 400, { error: 'Invalid JSON body.' });
+
+  const required = ['name', 'email', 'message'];
+  const err = validateRequired(body, required);
+  if (err) return sendJson(res, 400, { error: err });
+
+  const payload = {
+    name: body.name,
+    email: body.email,
+    company: body.company || '',
+    message: body.message,
+    at: new Date().toISOString()
+  };
+
+  await sendAuditLog({ type: 'contact_submission', ...payload });
+  return sendJson(res, 200, { status: 'received', payload });
+}
+
 async function serveStatic(res, pathName) {
   const safePath = normalize(pathName).replace(/^\/+/, '');
   const filePath = safePath === '' ? 'index.html' : safePath;
@@ -209,6 +231,7 @@ const server = createServer(async (req, res) => {
 
   if (req.method === 'POST' && url.pathname === '/api/book/food') return handleFoodBooking(req, res);
   if (req.method === 'POST' && url.pathname === '/api/book/cab') return handleCabBooking(req, res);
+  if (req.method === 'POST' && url.pathname === '/api/contact') return handleContact(req, res);
   if (req.method === 'GET') return serveStatic(res, url.pathname);
 
   sendJson(res, 405, { error: 'Method not allowed' });
