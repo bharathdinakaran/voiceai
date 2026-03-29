@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VOICEAI LABS — Home</title>
+    <meta
+      name="description"
+      content="VOICEAI LABS home page with live booking console for food and cab use cases."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <nav class="nav container">
+        <div class="brand">VOICEAI <span>LABS</span></div>
+        <div class="nav-links">
+          <a href="index.html">Home</a>
+          <a href="about.html">About Us</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </nav>
+      <div class="container hero-content">
+        <p class="eyebrow">Voice-First Agentic Operating Layer</p>
+        <h1>Real voice bookings. No screen automation.</h1>
+        <p class="lead">
+          VOICEAI LABS parses spoken requests, builds structured payloads, and executes bookings on
+          authorized APIs for food and cabs.
+        </p>
+      </div>
+    </header>
+
+    <main>
+      <section class="section container" id="architecture">
+        <h2>How it works</h2>
+        <div class="grid five-up">
+          <article class="card"><h3>Intent Recognition</h3><p>Understand user goal from speech.</p></article>
+          <article class="card"><h3>Entity Extraction</h3><p>Time, destination, cuisine, budget, pickup.</p></article>
+          <article class="card"><h3>Policy & Consent</h3><p>Security checks and explicit confirmation.</p></article>
+          <article class="card"><h3>API Execution</h3><p>Server-side calls to Zomato/Ola/Uber.</p></article>
+          <article class="card"><h3>Audit Trail</h3><p>Store booking logs and provider responses.</p></article>
+        </div>
+      </section>
+
+      <section class="section section-alt" id="booking">
+        <div class="container">
+          <h2>Live Booking Console</h2>
+          <p>
+            Submit voice-derived details below. These forms trigger backend API calls. Configure
+            provider credentials in environment variables before use.
+          </p>
+
+          <div class="grid two-up">
+            <form id="foodForm" class="card form-card">
+              <h3>Order Food (Zomato)</h3>
+              <label>Item <input name="item" required placeholder="Chicken biryani" /></label>
+              <label>Delivery Address <input name="address" required placeholder="Home address" /></label>
+              <label>Delivery Time <input type="time" name="deliveryTime" required /></label>
+              <label>Budget (INR) <input type="number" name="budgetInr" required min="1" /></label>
+              <label>Notes <input name="notes" placeholder="No onions" /></label>
+              <details>
+                <summary>Advanced: Zomato API override (optional)</summary>
+                <label>Zomato Base URL <input name="zomatoBaseUrl" placeholder="https://api.partner.com" /></label>
+                <label>Zomato API Key <input name="zomatoApiKey" placeholder="Bearer token value" /></label>
+              </details>
+              <button class="btn" type="submit">Place Real Food Order</button>
+            </form>
+
+            <form id="cabForm" class="card form-card">
+              <h3>Book Cab (Ola / Uber)</h3>
+              <label>Pickup <input name="pickup" required placeholder="Current location" /></label>
+              <label>Destination <input name="destination" required placeholder="Airport" /></label>
+              <label>Schedule Time <input type="datetime-local" name="scheduleTime" required /></label>
+              <label>Provider Preference
+                <select name="providerPreference">
+                  <option value="auto">Auto (best available)</option>
+                  <option value="ola">Ola</option>
+                  <option value="uber">Uber</option>
+                </select>
+              </label>
+              <label>Service Type <input name="serviceType" placeholder="sedan" /></label>
+              <label>Notes <input name="notes" placeholder="Call on arrival" /></label>
+              <details>
+                <summary>Advanced: Provider API overrides (optional)</summary>
+                <label>Ola Base URL <input name="olaBaseUrl" placeholder="https://api.ola.com" /></label>
+                <label>Ola API Key <input name="olaApiKey" placeholder="Ola bearer token" /></label>
+                <label>Uber Base URL <input name="uberBaseUrl" placeholder="https://api.uber.com" /></label>
+                <label>Uber API Key <input name="uberApiKey" placeholder="Uber bearer token" /></label>
+              </details>
+              <button class="btn" type="submit">Place Real Cab Booking</button>
+            </form>
+          </div>
+
+          <div class="demo-shell">
+            <h3>System Output</h3>
+            <pre id="output" aria-live="polite">Waiting for booking request...</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>VOICEAI LABS — Neutral transaction orchestration across services.</p>
+      </div>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
