@@ -59,6 +59,8 @@
           <div class="grid two-up">
             <form id="foodForm" class="card form-card">
               <h3>Order Food (Zomato)</h3>
+              <button class="btn btn-secondary voice-btn" type="button" data-voice-target="food">🎤 Speak Food Order</button>
+              <label>Voice Transcript <input name="voiceTranscriptFood" id="voiceTranscriptFood" placeholder="Transcript appears here" /></label>
               <label>Item <input name="item" required placeholder="Chicken biryani" /></label>
               <label>Delivery Address <input name="address" required placeholder="Home address" /></label>
               <label>Delivery Time <input type="time" name="deliveryTime" required /></label>
@@ -74,6 +76,8 @@
 
             <form id="cabForm" class="card form-card">
               <h3>Book Cab (Ola / Uber)</h3>
+              <button class="btn btn-secondary voice-btn" type="button" data-voice-target="cab">🎤 Speak Cab Booking</button>
+              <label>Voice Transcript <input name="voiceTranscriptCab" id="voiceTranscriptCab" placeholder="Transcript appears here" /></label>
               <label>Pickup <input name="pickup" required placeholder="Current location" /></label>
               <label>Destination <input name="destination" required placeholder="Airport" /></label>
               <label>Schedule Time <input type="datetime-local" name="scheduleTime" required /></label>

@@ -46,3 +46,14 @@ If env vars are not set yet, you can pass credentials in request body for testin
 - Cab booking: `olaBaseUrl`, `olaApiKey`, `uberBaseUrl`, `uberApiKey`
 
 When credentials are missing, API now returns exact missing variable names in `missing`.
+
+
+## AI4Bharat Voice Layer
+
+- Frontend records 5s microphone audio and sends it to `POST /api/asr/ai4bharat`.
+- Backend proxies audio to AI4Bharat ASR and returns transcript.
+- Set `.env`:
+  - `AI4BHARAT_ASR_URL`
+  - `AI4BHARAT_API_KEY`
+
+Then use **Speak Food Order** or **Speak Cab Booking** on Home page to auto-fill fields from transcript.

@@ -1,6 +1,7 @@
 const foodForm = document.getElementById('foodForm');
 const cabForm = document.getElementById('cabForm');
 const output = document.getElementById('output');
+const voiceButtons = document.querySelectorAll('.voice-btn');
 
 const apiBase = (window.__VOICEAI_API_BASE__ || '').replace(/\/$/, '');
 const apiUrl = (path) => `${apiBase}${path}`;
@@ -42,6 +43,94 @@ async function postJSON(url, payload) {
 
   return body;
 }
+
+async function recordAudio() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    throw new Error('Microphone access is not supported in this browser.');
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const mediaRecorder = new MediaRecorder(stream);
+  const chunks = [];
+
+  return new Promise((resolve, reject) => {
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunks.push(event.data);
+    };
+
+    mediaRecorder.onerror = () => reject(new Error('Voice recording failed.'));
+
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const arrayBuffer = await blob.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      bytes.forEach((b) => {
+        binary += String.fromCharCode(b);
+      });
+      resolve({
+        audioBase64: btoa(binary),
+        mimeType: 'audio/webm'
+      });
+    };
+
+    mediaRecorder.start();
+    setTimeout(() => mediaRecorder.stop(), 5000);
+  });
+}
+
+function autofillFromTranscript(target, transcript) {
+  const lower = transcript.toLowerCase();
+
+  if (target === 'food') {
+    const itemMatch = lower.match(/order\s+(.*?)\s+(from|for|at|under|deliver|delivery)/);
+    if (itemMatch) foodForm.item.value = itemMatch[1].trim();
+
+    const budgetMatch = lower.match(/(?:under|within|budget)\s*₹?\s*(\d+)/);
+    if (budgetMatch) foodForm.budgetInr.value = Number(budgetMatch[1]);
+
+    if (!foodForm.item.value && lower.includes('dosa')) foodForm.item.value = 'dosa';
+    document.getElementById('voiceTranscriptFood').value = transcript;
+  }
+
+  if (target === 'cab') {
+    const toMatch = lower.match(/to\s+([a-z\s]+)/);
+    if (toMatch) cabForm.destination.value = toMatch[1].trim();
+
+    if (!cabForm.destination.value && lower.includes('airport')) cabForm.destination.value = 'airport';
+    document.getElementById('voiceTranscriptCab').value = transcript;
+  }
+}
+
+async function runVoiceToText(target) {
+  render({ status: 'listening', target, message: 'Recording for 5 seconds...' });
+  const audio = await recordAudio();
+
+  const asr = await postJSON(apiUrl('/api/asr/ai4bharat'), {
+    ...audio,
+    languageCode: 'en',
+    task: 'transcribe'
+  });
+
+  const transcript = asr.transcript || '';
+  autofillFromTranscript(target, transcript);
+  render({ status: 'transcribed', target, transcript, raw: asr.raw || null });
+}
+
+voiceButtons.forEach((button) => {
+  button.addEventListener('click', async () => {
+    const target = button.dataset.voiceTarget;
+    button.disabled = true;
+    try {
+      await runVoiceToText(target);
+    } catch (error) {
+      render({ status: 'failed', type: 'voice', target, error: error.message });
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
 
 foodForm.addEventListener('submit', async (event) => {
   event.preventDefault();

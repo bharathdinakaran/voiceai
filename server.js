@@ -250,6 +250,73 @@ async function handleCabBooking(req, res) {
 
 
 
+
+function extractTranscript(payload) {
+  if (!payload || typeof payload !== 'object') return '';
+  if (typeof payload.transcript === 'string') return payload.transcript;
+  if (typeof payload.text === 'string') return payload.text;
+  if (Array.isArray(payload.output) && payload.output[0]) {
+    const first = payload.output[0];
+    if (typeof first.source === 'string') return first.source;
+    if (typeof first.transcript === 'string') return first.transcript;
+    if (typeof first.text === 'string') return first.text;
+  }
+  if (Array.isArray(payload.data) && payload.data[0]) {
+    const first = payload.data[0];
+    if (typeof first.transcript === 'string') return first.transcript;
+    if (typeof first.text === 'string') return first.text;
+  }
+  return '';
+}
+
+async function handleAi4BharatAsr(req, res) {
+  const body = await parseJson(req);
+  if (!body) return sendJson(res, 400, { error: 'Invalid JSON body.' });
+
+  const required = ['audioBase64'];
+  const err = validateRequired(body, required);
+  if (err) return sendJson(res, 400, { error: err });
+
+  const endpoint = (process.env.AI4BHARAT_ASR_URL || '').trim();
+  const key = (process.env.AI4BHARAT_API_KEY || '').trim();
+  if (!endpoint || !key) {
+    return sendJson(res, 400, {
+      error: 'AI4Bharat ASR is not configured.',
+      missing: [!endpoint ? 'AI4BHARAT_ASR_URL' : null, !key ? 'AI4BHARAT_API_KEY' : null].filter(Boolean),
+      fix: 'Set AI4BHARAT_ASR_URL and AI4BHARAT_API_KEY in .env.'
+    });
+  }
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${key}`
+      },
+      body: JSON.stringify({
+        audioContent: body.audioBase64,
+        audioFormat: body.mimeType || 'audio/webm',
+        languageCode: body.languageCode || 'en',
+        task: body.task || 'transcribe'
+      })
+    });
+
+    const rawText = await response.text();
+    let parsed;
+    try { parsed = rawText ? JSON.parse(rawText) : {}; } catch { parsed = { rawText }; }
+    if (!response.ok) {
+      return sendJson(res, 502, { error: `AI4Bharat ASR failed (${response.status})`, details: parsed });
+    }
+
+    const transcript = extractTranscript(parsed);
+    await sendAuditLog({ type: 'asr_transcription', provider: 'ai4bharat', transcript, at: new Date().toISOString() });
+    return sendJson(res, 200, { provider: 'ai4bharat', transcript, raw: parsed });
+  } catch (error) {
+    return sendJson(res, 502, { error: error.message });
+  }
+}
+
 async function handleContact(req, res) {
   const body = await parseJson(req);
   if (!body) return sendJson(res, 400, { error: 'Invalid JSON body.' });
@@ -318,6 +385,7 @@ const server = createServer(async (req, res) => {
   if (req.method === 'POST' && url.pathname === '/api/book/food') return handleFoodBooking(req, res);
   if (req.method === 'POST' && url.pathname === '/api/book/cab') return handleCabBooking(req, res);
   if (req.method === 'POST' && url.pathname === '/api/contact') return handleContact(req, res);
+  if (req.method === 'POST' && url.pathname === '/api/asr/ai4bharat') return handleAi4BharatAsr(req, res);
   if (req.method === 'GET') return serveStatic(res, url.pathname);
 
   sendJson(res, 405, { error: 'Method not allowed' });
