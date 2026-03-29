@@ -21,6 +21,7 @@ loadEnv();
 
 const PORT = Number(process.env.PORT || 8080);
 const LIVE_BOOKING_ENABLED = process.env.LIVE_BOOKING_ENABLED === 'true';
+const DEMO_MODE = process.env.DEMO_MODE !== 'false';
 
 const contentTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -129,14 +130,98 @@ async function sendAuditLog(event) {
   }
 }
 
+
+function generateBookingId(prefix) {
+  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function demoFoodBooking(payload) {
+  return {
+    provider: 'demo_provider',
+    status: 'booked',
+    result: {
+      booking_id: generateBookingId('food'),
+      item: payload.item,
+      eta_minutes: 28,
+      total_inr: Math.max(120, Math.min(1200, Number(payload.budget_inr || payload.budgetInr || 300))),
+      message: 'Demo booking created successfully for investor walkthrough.'
+    }
+  };
+}
+
+function demoCabBooking(payload, preferred = 'demo_provider') {
+  return {
+    provider: preferred,
+    status: 'booked',
+    result: {
+      booking_id: generateBookingId('cab'),
+      pickup: payload.pickup,
+      destination: payload.destination,
+      eta_minutes: 6,
+      fare_inr: 340,
+      message: 'Demo cab booking created successfully for investor walkthrough.'
+    }
+  };
+}
+
+function providerCatalog() {
+  return {
+    mode: {
+      liveBookingEnabled: LIVE_BOOKING_ENABLED,
+      demoMode: DEMO_MODE
+    },
+    providers: [
+      {
+        key: 'zomato',
+        category: 'food',
+        integration_type: 'partner_api',
+        configured: Boolean(process.env.ZOMATO_BASE_URL && process.env.ZOMATO_API_KEY),
+        notes: 'Usually available via partner/commercial integration.'
+      },
+      {
+        key: 'ola',
+        category: 'mobility',
+        integration_type: 'partner_api',
+        configured: Boolean(process.env.OLA_BASE_URL && process.env.OLA_API_KEY),
+        notes: 'Enterprise/partner API access may be required.'
+      },
+      {
+        key: 'uber',
+        category: 'mobility',
+        integration_type: 'partner_api',
+        configured: Boolean(process.env.UBER_BASE_URL && process.env.UBER_API_KEY),
+        notes: 'Use official Uber developer/partner APIs where available.'
+      },
+      {
+        key: 'demo_provider',
+        category: 'food,mobility',
+        integration_type: 'mock',
+        configured: DEMO_MODE,
+        notes: 'Built-in mock provider for investor demos when live provider credentials are unavailable.'
+      }
+    ],
+    developer_endpoints: {
+      food_booking: 'POST /api/book/food',
+      cab_booking: 'POST /api/book/cab',
+      provider_catalog: 'GET /api/providers'
+    }
+  };
+}
+
 async function handleFoodBooking(req, res) {
   const body = await parseJson(req);
   if (!body) return sendJson(res, 400, { error: 'Invalid JSON body.' });
 
   const err = validateRequired(body, requiredFields.food);
   if (err) return sendJson(res, 400, { error: err });
-  if (!LIVE_BOOKING_ENABLED) {
-    return sendJson(res, 403, { error: 'LIVE_BOOKING_ENABLED is false. Real booking is disabled.' });
+  if (!LIVE_BOOKING_ENABLED && DEMO_MODE) {
+    const demo = demoFoodBooking(body);
+    await sendAuditLog({ type: 'food_order_demo', request: body, response: demo, at: new Date().toISOString() });
+    return sendJson(res, 200, demo);
+  }
+
+  if (!LIVE_BOOKING_ENABLED && !DEMO_MODE) {
+    return sendJson(res, 403, { error: 'LIVE_BOOKING_ENABLED is false and DEMO_MODE is disabled.' });
   }
 
   const payload = {
@@ -185,8 +270,14 @@ async function handleCabBooking(req, res) {
 
   const err = validateRequired(body, requiredFields.cab);
   if (err) return sendJson(res, 400, { error: err });
-  if (!LIVE_BOOKING_ENABLED) {
-    return sendJson(res, 403, { error: 'LIVE_BOOKING_ENABLED is false. Real booking is disabled.' });
+  if (!LIVE_BOOKING_ENABLED && DEMO_MODE) {
+    const demo = demoCabBooking(body, body.providerPreference || 'demo_provider');
+    await sendAuditLog({ type: 'cab_booking_demo', request: body, response: demo, at: new Date().toISOString() });
+    return sendJson(res, 200, demo);
+  }
+
+  if (!LIVE_BOOKING_ENABLED && !DEMO_MODE) {
+    return sendJson(res, 403, { error: 'LIVE_BOOKING_ENABLED is false and DEMO_MODE is disabled.' });
   }
 
   const payload = {
@@ -366,8 +457,13 @@ const server = createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/config') {
     return sendJson(res, 200, {
       apiBaseUrl: process.env.PUBLIC_API_BASE_URL || '',
-      liveBookingEnabled: LIVE_BOOKING_ENABLED
+      liveBookingEnabled: LIVE_BOOKING_ENABLED,
+      demoMode: DEMO_MODE
     });
+  }
+
+  if (req.method === 'GET' && url.pathname === '/api/providers') {
+    return sendJson(res, 200, providerCatalog());
   }
 
   if (req.method === 'GET' && url.pathname === '/api/health') {

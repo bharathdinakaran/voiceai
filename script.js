@@ -260,8 +260,10 @@ if (location.protocol === 'file:') {
     message: 'You opened this page as a file. Run `npm start` and open http://localhost:8080 for real booking.'
   });
 } else {
-  fetch(apiUrl('/api/health'))
-    .then((res) => res.json())
-    .then((health) => render({ startup: 'ready', health }))
+  Promise.all([
+    fetch(apiUrl('/api/health')).then((res) => res.json()),
+    fetch(apiUrl('/api/providers')).then((res) => res.json())
+  ])
+    .then(([health, providers]) => render({ startup: 'ready', health, providers }))
     .catch((error) => render({ startup: 'degraded', message: friendlyNetworkError(error) }));
 }

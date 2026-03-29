@@ -24,8 +24,9 @@ Open: `http://localhost:8080`
 ## API endpoints used by frontend
 
 - `GET /api/health`
-- `POST /api/book/food` → forwards to `${ZOMATO_BASE_URL}/orders`
-- `POST /api/book/cab` → forwards to `${OLA_BASE_URL}/bookings` and/or `${UBER_BASE_URL}/bookings`
+- `GET /api/providers` → provider discovery + mode status for demos
+- `POST /api/book/food` → forwards to `${ZOMATO_BASE_URL}/orders` (or demo provider when live mode disabled)
+- `POST /api/book/cab` → forwards to `${OLA_BASE_URL}/bookings` and/or `${UBER_BASE_URL}/bookings` (or demo provider when live mode disabled)
 - `POST /api/contact` → stores/forwards contact details to optional audit webhook
 
 If credentials are missing, booking endpoints return failure and do **not** fake bookings.
@@ -57,3 +58,10 @@ When credentials are missing, API now returns exact missing variable names in `m
   - `AI4BHARAT_API_KEY`
 
 Then use **Speak Food Order** or **Speak Cab Booking** on Home page to start recording, and click the same button again to stop when done speaking. The app transcribes, auto-fills detected fields, and asks for any missing required details before submit.
+
+
+## Investor demo mode (works without external provider credentials)
+
+- Set `LIVE_BOOKING_ENABLED=false` and `DEMO_MODE=true` in `.env`.
+- Booking APIs still return successful demo bookings so you can show full flow to investors.
+- Developers can inspect provider readiness at `GET /api/providers`.
