@@ -6,6 +6,29 @@ const voiceButtons = document.querySelectorAll('.voice-btn');
 const apiBase = (window.__VOICEAI_API_BASE__ || '').replace(/\/$/, '');
 const apiUrl = (path) => `${apiBase}${path}`;
 
+const voiceState = {
+  activeTarget: null,
+  recorder: null,
+  stream: null,
+  chunks: []
+};
+
+const requiredFieldsByTarget = {
+  food: ['item', 'address', 'deliveryTime', 'budgetInr'],
+  cab: ['pickup', 'destination', 'scheduleTime', 'providerPreference']
+};
+
+const friendlyFieldNames = {
+  item: 'food item',
+  address: 'delivery address',
+  deliveryTime: 'delivery time',
+  budgetInr: 'budget',
+  pickup: 'pickup location',
+  destination: 'destination',
+  scheduleTime: 'schedule time',
+  providerPreference: 'provider preference (auto/ola/uber)'
+};
+
 function render(data) {
   output.textContent = JSON.stringify(data, null, 2);
 }
@@ -44,39 +67,66 @@ async function postJSON(url, payload) {
   return body;
 }
 
-async function recordAudio() {
+function setVoiceButtonUI(activeTarget = null) {
+  voiceButtons.forEach((button) => {
+    const isActive = button.dataset.voiceTarget === activeTarget;
+    button.textContent = isActive
+      ? `⏹ Stop ${activeTarget === 'food' ? 'Food' : 'Cab'} Recording`
+      : `🎤 Speak ${button.dataset.voiceTarget === 'food' ? 'Food Order' : 'Cab Booking'}`;
+    button.disabled = Boolean(activeTarget && !isActive);
+  });
+}
+
+async function startRecording(target) {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error('Microphone access is not supported in this browser.');
   }
 
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const mediaRecorder = new MediaRecorder(stream);
-  const chunks = [];
+  const recorder = new MediaRecorder(stream);
 
+  voiceState.activeTarget = target;
+  voiceState.stream = stream;
+  voiceState.recorder = recorder;
+  voiceState.chunks = [];
+
+  recorder.ondataavailable = (event) => {
+    if (event.data.size > 0) voiceState.chunks.push(event.data);
+  };
+
+  recorder.start();
+  setVoiceButtonUI(target);
+  render({ status: 'listening', target, message: 'Recording... click stop when done speaking.' });
+}
+
+function stopRecording() {
   return new Promise((resolve, reject) => {
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) chunks.push(event.data);
-    };
+    const { recorder, stream, chunks, activeTarget } = voiceState;
+    if (!recorder) return reject(new Error('No active recording to stop.'));
 
-    mediaRecorder.onerror = () => reject(new Error('Voice recording failed.'));
-
-    mediaRecorder.onstop = async () => {
+    recorder.onerror = () => reject(new Error('Voice recording failed.'));
+    recorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
       const blob = new Blob(chunks, { type: 'audio/webm' });
       const arrayBuffer = await blob.arrayBuffer();
       const bytes = new Uint8Array(arrayBuffer);
       let binary = '';
-      bytes.forEach((b) => {
-        binary += String.fromCharCode(b);
-      });
+      bytes.forEach((b) => { binary += String.fromCharCode(b); });
+
+      voiceState.activeTarget = null;
+      voiceState.recorder = null;
+      voiceState.stream = null;
+      voiceState.chunks = [];
+      setVoiceButtonUI(null);
+
       resolve({
+        target: activeTarget,
         audioBase64: btoa(binary),
         mimeType: 'audio/webm'
       });
     };
 
-    mediaRecorder.start();
-    setTimeout(() => mediaRecorder.stop(), 5000);
+    recorder.stop();
   });
 }
 
@@ -103,31 +153,72 @@ function autofillFromTranscript(target, transcript) {
   }
 }
 
-async function runVoiceToText(target) {
-  render({ status: 'listening', target, message: 'Recording for 5 seconds...' });
-  const audio = await recordAudio();
+function getMissingFields(target) {
+  const form = target === 'food' ? foodForm : cabForm;
+  return requiredFieldsByTarget[target].filter((field) => {
+    const value = form.elements[field]?.value;
+    return value === undefined || value === null || String(value).trim() === '';
+  });
+}
 
+async function processVoiceCapture(target, audioBase64, mimeType) {
   const asr = await postJSON(apiUrl('/api/asr/ai4bharat'), {
-    ...audio,
+    audioBase64,
+    mimeType,
     languageCode: 'en',
     task: 'transcribe'
   });
 
   const transcript = asr.transcript || '';
   autofillFromTranscript(target, transcript);
-  render({ status: 'transcribed', target, transcript, raw: asr.raw || null });
+
+  const missing = getMissingFields(target);
+  if (missing.length > 0) {
+    render({
+      status: 'needs_details',
+      target,
+      transcript,
+      ask_user_for: missing.map((field) => friendlyFieldNames[field] || field),
+      message: 'Please fill the missing fields, then submit booking.'
+    });
+    return;
+  }
+
+  render({
+    status: 'ready_to_submit',
+    target,
+    transcript,
+    message: 'All required fields captured. Please review and submit booking.'
+  });
 }
 
 voiceButtons.forEach((button) => {
   button.addEventListener('click', async () => {
     const target = button.dataset.voiceTarget;
-    button.disabled = true;
+
     try {
-      await runVoiceToText(target);
+      if (!voiceState.activeTarget) {
+        await startRecording(target);
+        return;
+      }
+
+      if (voiceState.activeTarget !== target) {
+        return;
+      }
+
+      render({ status: 'processing_voice', target, message: 'Transcribing audio...' });
+      const recorded = await stopRecording();
+      await processVoiceCapture(recorded.target, recorded.audioBase64, recorded.mimeType);
     } catch (error) {
+      voiceState.activeTarget = null;
+      voiceState.recorder = null;
+      if (voiceState.stream) {
+        voiceState.stream.getTracks().forEach((t) => t.stop());
+      }
+      voiceState.stream = null;
+      voiceState.chunks = [];
+      setVoiceButtonUI(null);
       render({ status: 'failed', type: 'voice', target, error: error.message });
-    } finally {
-      button.disabled = false;
     }
   });
 });

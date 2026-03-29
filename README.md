@@ -56,4 +56,4 @@ When credentials are missing, API now returns exact missing variable names in `m
   - `AI4BHARAT_ASR_URL`
   - `AI4BHARAT_API_KEY`
 
-Then use **Speak Food Order** or **Speak Cab Booking** on Home page to auto-fill fields from transcript.
+Then use **Speak Food Order** or **Speak Cab Booking** on Home page to start recording, and click the same button again to stop when done speaking. The app transcribes, auto-fills detected fields, and asks for any missing required details before submit.
